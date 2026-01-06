@@ -1,3 +1,8 @@
+#pragma once
+#include <cstddef>
+#include <functional>
+#include <utility>
+
 // from boost hash combine: hashing of std::pairs for unordered_maps
 template <class T>
 inline void hash_combine(std::size_t & seed, const T & v)

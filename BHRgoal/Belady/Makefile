@@ -1,5 +1,6 @@
 TARGET = belady2
 OBJS += lib/parse_trace.o
+OBJS += ../../lib/trace/oracle_general_reader.o
 OBJS += lib/solve_mcf.o
 OBJS += belady2.o
 
@@ -8,8 +9,12 @@ CXXFLAGS += -std=c++11 #-stdlib=libc++ #non-linux
 CXXFLAGS += -MMD -MP # dependency tracking flags
 CXXFLAGS += -I.. -I ../../lib
 CXXFLAGS += -O3 -ffast-math -march=native # aggressive optimization settings
-CXXFLAGS += -Wall -Werror 
+CXXFLAGS += -Wall  
+CXXFLAGS += -Wno-maybe-uninitialized
 LDFLAGS += $(LIBS)
+# Uncomment to enable zstd support
+# CXXFLAGS += -DUSE_ZSTD
+# LDFLAGS += -lzstd
 
 all:		$(TARGET)
 

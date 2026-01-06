@@ -1,8 +1,10 @@
 #pragma once
-#include <misc/hash_combine.h>
+#include <cstdint>
+#include <utility>
 #include <vector>
 #include <string>
 #include <iostream>
+#include <misc/hash_combine.h>
 
 // uncomment to enable debugging:
 //#define DEBUG 1

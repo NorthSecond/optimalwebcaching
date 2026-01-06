@@ -8,3 +8,35 @@
 *.sh
 *~
 *#
+
+# Backup files from automated scripts
+*.bak
+*.fixbak
+*.utilbak
+*.hdrbak
+
+# Test results
+test_results/
+
+# OracleGeneral trace files (optional - comment out if you want to track them)
+lib/trace/*.dat
+lib/trace/*.dat.zst
+
+# Compiled binaries (all algorithms)
+/OHRgoal/FOO/foo
+/OHRgoal/PFOO-U/pfoou
+/OHRgoal/PFOO-L/pfool
+/OHRgoal/Belady/belady2
+/OHRgoal/Belady-Size/belady2size
+/BHRgoal/PFOO-L/pfool
+/BHRgoal/Belady/belady2
+/BHRgoal/BeladySplit/belady2
+/Statistics/statistics
+
+# Test tools
+/test_reader
+/generate_test_trace
+
+# for vibe coding
+.claude/
+.spec-workflow/

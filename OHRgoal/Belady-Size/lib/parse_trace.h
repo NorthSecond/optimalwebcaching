@@ -1,4 +1,6 @@
 #pragma once
+#include <cstdint>
+#include <utility>
 #include <misc/hash_combine.h>
 #include <vector>
 #include <string>

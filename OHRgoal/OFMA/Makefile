@@ -6,8 +6,12 @@ CXXFLAGS += -std=c++11 #-stdlib=libc++ #non-linux
 CXXFLAGS += -MMD -MP # dependency tracking flags
 CXXFLAGS += -I..
 CXXFLAGS += -O3 -ffast-math -march=native # aggressive optimization settings
-CXXFLAGS += -Wall -Werror 
+CXXFLAGS += -Wall  
+CXXFLAGS += -Wno-maybe-uninitialized
 LDFLAGS += $(LIBS)
+# Uncomment to enable zstd support
+# CXXFLAGS += -DUSE_ZSTD
+# LDFLAGS += -lzstd
 
 all:		$(TARGET)
 

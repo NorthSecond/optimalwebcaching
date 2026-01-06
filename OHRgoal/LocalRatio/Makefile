@@ -7,6 +7,9 @@ CXXFLAGS += -MMD -MP # dependency tracking flags
 CXXFLAGS += -I..
 CXXFLAGS += -O3 -ffast-math -march=native # aggressive optimization settings
 LDFLAGS += $(LIBS)
+# Uncomment to enable zstd support
+# CXXFLAGS += -DUSE_ZSTD
+# LDFLAGS += -lzstd
 
 all:		$(TARGET)
 

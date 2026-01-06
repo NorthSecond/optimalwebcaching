@@ -1,23 +1,36 @@
-//#include <iostream>
-#include <fstream>
+#include <iostream>
 #include <map>
 #include <cassert>
 #include <unordered_map>
 #include <tuple>
 #include <cmath>
+#include <utility>
 #include "parse_trace.h"
+#include "../../../lib/trace/oracle_general_reader.h"
 
 //using namespace lemon;
 
 uint64_t parseTraceFile(std::vector<trEntry> & trace, std::string & path) {
-    std::ifstream traceFile(path);
-    uint64_t time, id, size, reqc=0, uniqc=0;
+    OracleGeneralReader reader(path);
+    std::vector<OracleGeneralReader::Record> records;
+
+    if (!reader.readAll(records)) {
+        std::cerr << "Error reading trace: " << reader.getError() << std::endl;
+        return 0;
+    }
+
+    uint64_t reqc = 0, uniqc = 0;
     std::unordered_map<std::pair<uint64_t, uint64_t>, uint64_t> lastSeen;
 
-    while(traceFile >> time >> id >> size) {
+    for (const auto& rec : records) {
         if(reqc % 1000000 == 0) {
             std::cerr << "parsing " << reqc << "\n";
         }
+
+        uint64_t time = rec.timestamp;
+        uint64_t id = rec.obj_id;
+        uint64_t size = rec.obj_size;
+
         const auto idSize = std::make_pair(id,size);
         if(lastSeen.count(idSize)>0) {
             trace[lastSeen[idSize]].hasNext = true;

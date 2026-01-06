@@ -1,3 +1,5 @@
+#include <cstdint>
+#include <utility>
 #include <vector>
 #include <string>
 #include <lemon/smart_graph.h>

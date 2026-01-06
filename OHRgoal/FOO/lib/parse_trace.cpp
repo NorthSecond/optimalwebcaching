@@ -1,26 +1,38 @@
-//#include <iostream>
-#include <fstream>
-#include <map>
-#include <unordered_map>
-#include <tuple>
 #include "parse_trace.h"
+#include "../../../lib/trace/oracle_general_reader.h"
+#include <map>
+#include <iostream>
 
 using namespace lemon;
 
 uint64_t parseTraceFile(std::vector<traceEntry> & trace, std::string & path) {
-    std::ifstream traceFile(path);
-    uint64_t time, id, size, reqc=0, uniqc=0;
-    std::map<std::pair<uint64_t, uint64_t>, uint64_t> lastSeen;
+    OracleGeneralReader reader(path);
+    std::vector<OracleGeneralReader::Record> records;
 
-    while(traceFile >> time >> id >> size) {
-        if(lastSeen.count(std::make_pair(id,size))>0) {
-            std::get<2>(trace[lastSeen[std::make_pair(id,size)]]) = true;
+    if (!reader.readAll(records)) {
+        std::cerr << "Error reading trace: " << reader.getError() << std::endl;
+        return 0;
+    }
+
+    std::map<std::pair<uint64_t, uint64_t>, uint64_t> lastSeen;
+    uint64_t reqc = 0, uniqc = 0;
+
+    for (const auto& rec : records) {
+        uint64_t time = rec.timestamp;
+        uint64_t id = rec.obj_id;
+        uint64_t size = rec.obj_size;
+
+        auto key = std::make_pair(id, size);
+        if (lastSeen.count(key) > 0) {
+            std::get<2>(trace[lastSeen[key]]) = true;  // Mark hasNext = true
         } else {
             uniqc++;
         }
-        trace.emplace_back(id,size,false,time,-1);
-        lastSeen[std::make_pair(id,size)]=reqc++;
+
+        trace.emplace_back(id, size, false, time, -1);
+        lastSeen[key] = reqc++;
     }
+
     return uniqc;
 }
                     
