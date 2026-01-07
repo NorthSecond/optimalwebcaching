@@ -40,3 +40,6 @@ lib/trace/*.dat.zst
 # for vibe coding
 .claude/
 .spec-workflow/
+
+# for uv env
+foo-cuopt

@@ -1,0 +1,25 @@
+[project]
+name = "foo-cuopt"
+version = "0.1.0"
+description = "FOO Optimal Caching - GPU-Accelerated with NVIDIA cuOpt"
+requires-python = ">=3.10"
+dependencies = [
+    "cuopt-cu12>=25.10",
+    "numpy>=1.24",
+    "scipy>=1.11",
+    "zstandard>=0.22",
+    "libcachesim>=0.3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "memory-profiler>=0.61",
+]
+
+[project.scripts]
+foo-cuopt = "foo_cuopt:main"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
