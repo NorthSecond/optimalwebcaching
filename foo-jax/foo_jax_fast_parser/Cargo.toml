@@ -1,0 +1,19 @@
+[package]
+name = "foo_jax_fast_parser"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "foo_jax_fast_parser"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.22", features = ["extension-module"] }
+numpy = "0.22"
+zstd = "0.13"
+ahash = "0.8"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
