@@ -64,6 +64,7 @@ __pycache__/
 
 # Generated pairwise data (large CSV files)
 foo-jax/pairwise_*.csv
+foo-jax/data_*/
 foo-jax/*.parquet
 
 # Test/debug outputs
