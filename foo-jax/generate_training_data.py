@@ -165,16 +165,15 @@ def run_single_config(
     # 5. Generate pairwise data
     print(f"\n[5/5] Generating pairwise data...")
     start = time.time()
-    from foo_jax.pairwise_temporal import export_pairwise_temporal
+    from foo_jax.pairwise_libcachesim import export_pairwise_libcachesim
 
-    n_pairs_generated = export_pairwise_temporal(
+    n_pairs_generated = export_pairwise_libcachesim(
         trace, foo_result, output_path,
         cache_size=cache_size,
-        n_pairs=n_pairs,
-        sample_interval=sample_interval,
         max_pairs_per_point=max_pairs_per_point,
         min_history_len=2,
         seed=42 + int(cache_ratio * 1000),
+        sampling_strategy="stratified",
     )
     gen_time = time.time() - start
     print(f"  Generation time: {gen_time:.1f}s")

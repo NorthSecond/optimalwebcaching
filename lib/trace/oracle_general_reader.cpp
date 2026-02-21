@@ -61,16 +61,21 @@ bool OracleGeneralReader::readUncompressed(FILE* file, std::vector<Record>& reco
     }
 
     // Parse records
-    records.resize(num_records);
+    records.reserve(num_records);
     for (size_t i = 0; i < num_records; ++i) {
         const char* ptr = buffer.data() + i * RECORD_SIZE;
-        if (!parseRecord(ptr, records[i])) {
+        Record rec;
+        if (!parseRecord(ptr, rec)) {
             error_msg_ = "Failed to parse record at index " + std::to_string(i);
             return false;
         }
+        if (rec.obj_size == 0) {
+            continue;
+        }
+        records.push_back(rec);
     }
 
-    record_count_ = num_records;
+    record_count_ = records.size();
     return true;
 }
 
@@ -138,17 +143,22 @@ bool OracleGeneralReader::readCompressed(FILE* file, std::vector<Record>& record
 
     // Parse records
     size_t num_records = decompressed_size / RECORD_SIZE;
-    records.resize(num_records);
+    records.reserve(num_records);
 
     const char* ptr = decompressed_data.data();
     for (size_t i = 0; i < num_records; ++i, ptr += RECORD_SIZE) {
-        if (!parseRecord(ptr, records[i])) {
+        Record rec;
+        if (!parseRecord(ptr, rec)) {
             error_msg_ = "Failed to parse record at index " + std::to_string(i);
             return false;
         }
+        if (rec.obj_size == 0) {
+            continue;
+        }
+        records.push_back(rec);
     }
 
-    record_count_ = num_records;
+    record_count_ = records.size();
     return true;
 #endif
 }
@@ -159,12 +169,6 @@ bool OracleGeneralReader::parseRecord(const char* buffer, Record& record) {
     std::memcpy(&record.obj_id, buffer + 4, 8);
     std::memcpy(&record.obj_size, buffer + 12, 4);
     std::memcpy(&record.next_access_vtime, buffer + 16, 8);
-
-    // Validate
-    if (record.obj_size == 0) {
-        // Skip zero-size objects
-        return false;
-    }
 
     return true;
 }

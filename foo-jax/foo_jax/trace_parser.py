@@ -18,7 +18,7 @@ import numpy as np
 # Try to import Rust fast parser
 try:
     import foo_jax_fast_parser as _rust_parser
-    _HAS_RUST_PARSER = True
+    _HAS_RUST_PARSER = hasattr(_rust_parser, "parse_trace_fast")
 except ImportError:
     _HAS_RUST_PARSER = False
 
@@ -84,7 +84,14 @@ def _parse_trace_rust(
     if progress_callback:
         progress_callback("Parsing trace with Rust extension...")
 
-    result = _rust_parser.parse_trace_fast(path, max_requests)
+    try:
+        result = _rust_parser.parse_trace_fast(path, max_requests)
+    except Exception as exc:
+        # Fall back to Python parser if the extension is present but broken or
+        # compiled against an incompatible ABI.
+        if progress_callback:
+            progress_callback(f"Rust parser unavailable ({exc}), falling back to Python parser")
+        return _parse_trace_python(path, max_requests, progress_callback)
 
     return TraceData(
         timestamps=np.asarray(result.get_timestamps()),
@@ -249,6 +256,8 @@ def parse_trace_fast(
 
     Approximately 5-10x faster than parse_trace() for large files.
     """
+    import zstandard as zstd
+
     # Read and decompress file
     is_zst = path.endswith('.zst')
 

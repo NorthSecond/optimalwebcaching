@@ -14,9 +14,9 @@ CXXFLAGS += -Wall
 CXXFLAGS += -Wno-maybe-uninitialized
 # Uncomment the following to enable stricter error checking (may fail with LEMON)
 # CXXFLAGS += -Werror
-# Uncomment to enable zstd support
-# CXXFLAGS += -DUSE_ZSTD
-# LDFLAGS += -lzstd
+# Enable zstd support for .zst compressed trace files
+CXXFLAGS += -DUSE_ZSTD
+LDFLAGS += -lzstd
 
 all:		$(TARGET)
 

@@ -19,10 +19,16 @@ Reference:
     SIGMETRICS 2018
 """
 
+from .output import extract_decision_variables
+from .solver import solve, solve_jit
+from .topology import build_topology
+from .trace_parser import parse_trace
+
 __version__ = "0.1.0"
 __all__ = [
     "parse_trace",
     "build_topology",
-    "solve_foo",
+    "solve",
+    "solve_jit",
     "extract_decision_variables",
 ]

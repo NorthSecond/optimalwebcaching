@@ -79,34 +79,27 @@ def run_pipeline(max_requests: int, cache_ratio: float, output_path: str):
     # 7. Generate pairwise data
     print("\n[Step 7] Generating pairwise data...")
     start = time.time()
-    from foo_jax.pairwise_export import export_pairwise_csv
+    from foo_jax.pairwise_libcachesim import export_pairwise_libcachesim
 
     # Adjust sampling for scale
-    sample_ratio = 0.5 if max_requests <= 100000 else 0.2
-    max_pairs = 20 if max_requests <= 100000 else 5
+    max_pairs_per_point = 20 if max_requests <= 100000 else 5
 
-    df = export_pairwise_csv(
+    n_pairs = export_pairwise_libcachesim(
         trace, foo_result, output_path,
         cache_size=cache_size,
-        sample_ratio=sample_ratio,
-        max_pairs_per_point=max_pairs,
+        max_pairs_per_point=max_pairs_per_point,
         min_history_len=2,
-        max_file_size_gb=2.0
+        seed=42,
+        sampling_strategy="stratified",
     )
     print(f"  Time: {time.time() - start:.1f}s")
 
     # Summary
     print(f"\n[Summary]")
-    print(f"  Pairs: {len(df):,}")
+    print(f"  Pairs: {n_pairs:,}")
     print(f"  Total time: {time.time() - total_start:.1f}s")
 
-    if len(df) > 0:
-        has_3_lo = np.sum(df['lo_last_5_access_2'].values >= 0)
-        has_5_lo = np.sum(df['lo_last_5_access_4'].values >= 0)
-        print(f"  Lo >=3 accesses: {100*has_3_lo/len(df):.1f}%")
-        print(f"  Lo >=5 accesses: {100*has_5_lo/len(df):.1f}%")
-
-    return len(df)
+    return n_pairs
 
 
 def main():
