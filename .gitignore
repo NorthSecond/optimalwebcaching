@@ -1,13 +1,16 @@
+# C/C++ build artifacts
 *.d
 *.o
-*.log
-*.txt
-*.tr
-*.csv
-*.result
-*.sh
+*.so
+*.dylib
+*.dll
 *~
 *#
+
+# Logs and local result artifacts
+*.log
+*.result
+OHRgoal/FOO/test_*_cxx.txt
 
 # Backup files from automated scripts
 *.bak
@@ -18,7 +21,8 @@
 # Test results
 test_results/
 
-# OracleGeneral trace files (optional - comment out if you want to track them)
+# Local trace artifacts (optional - comment out if you want to track them)
+*.tr
 lib/trace/*.dat
 lib/trace/*.dat.zst
 
@@ -33,50 +37,38 @@ lib/trace/*.dat.zst
 /BHRgoal/BeladySplit/belady2
 /Statistics/statistics
 
-# Test tools
+# Test tools / binaries
 /test_reader
 /generate_test_trace
+/tests/runtests
 
-# for vibe coding
+# Local assistant/workflow folders
 .claude/
 .spec-workflow/
 
-# for uv env
-foo-cuopt
-
-# foo-jax Python project
-foo-jax/.venv/
-foo-jax/__pycache__/
-foo-jax/**/__pycache__/
-foo-jax/*.egg-info/
-foo-jax/.pytest_cache/
-foo-jax/.mypy_cache/
-foo-jax/.ruff_cache/
-
-# Python bytecode
+# Python virtualenvs and caches
+.venv/
+**/__pycache__/
 *.pyc
 *.pyo
 *.pyd
-__pycache__/
-
-# Jupyter Notebook
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 .ipynb_checkpoints/
-
-# Generated pairwise data (large CSV files)
-foo-jax/pairwise_*.csv
-foo-jax/data_*/
-foo-jax/*.parquet
-
-# Test/debug outputs
-foo-jax/run_output.log
-foo-jax/test_*.csv
-
-# uv/pip cache
 .uv/
 pip-wheel-metadata/
 
-# Rust build artifacts
+# foo-jax generated data
+foo-jax/.venv/
+foo-jax/pairwise_*.csv
+foo-jax/data_*/
+foo-jax/*.parquet
+foo-jax/run_output.log
+foo-jax/test_*.csv
 foo-jax/foo_jax_fast_parser/target/
-*.so
-*.dylib
-*.dll
+
+# cuopt-python local artifacts
+cuopt-python/.venv/
+cuopt-python/uv.lock
