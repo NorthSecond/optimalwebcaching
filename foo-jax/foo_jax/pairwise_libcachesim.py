@@ -216,7 +216,7 @@ class PairwiseGenerator:
             hi_last_5[2],
             hi_last_5[3],
             hi_last_5[4],
-            float(remaining_space),
+            hi_last_5[0],
             lo_state.obj_id,
             lo_state.obj_size,
             lo_mean_arr,
@@ -225,7 +225,7 @@ class PairwiseGenerator:
             lo_last_5[2],
             lo_last_5[3],
             lo_last_5[4],
-            float(remaining_space),
+            lo_last_5[0],
             1,  # label
         )
 

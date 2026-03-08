@@ -72,3 +72,6 @@ foo-jax/foo_jax_fast_parser/target/
 # cuopt-python local artifacts
 cuopt-python/.venv/
 cuopt-python/uv.lock
+
+# Local large-scale generation workspace (trace subsets, dvars, pairs, logs)
+local_runs/
