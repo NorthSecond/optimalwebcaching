@@ -2,9 +2,20 @@
 """Generate pairwise data with footprint-based cache sizes (0.1% and 10%)."""
 
 import time
+import os
+from pathlib import Path
 import numpy as np
 
-TRACE_PATH = "/home/ubuntu/ssd/libCacheSim/data/twitter/cluster54.oracleGeneral.sample10.zst"
+REPO_ROOT = Path(__file__).resolve().parents[1]
+DATA_ROOT = REPO_ROOT.parent
+TRACE_PATH = str(
+    Path(
+        os.environ.get(
+            "LIBCACHESIM_TRACE_PATH",
+            DATA_ROOT / "libCacheSim" / "data" / "twitter" / "cluster54.oracleGeneral.sample10.zst",
+        )
+    )
+)
 
 # Cache size ratios relative to footprint (unique bytes)
 CACHE_RATIOS = [0.001, 0.1]  # 0.1% and 10%

@@ -8,6 +8,7 @@ import numpy as np
 import time
 import os
 import sys
+from pathlib import Path
 from dataclasses import dataclass
 from typing import List
 
@@ -25,16 +26,19 @@ class MockFOOResult:
     dvars: np.ndarray
 
 import types
+REPO_ROOT = Path(__file__).resolve().parent
+FOO_JAX_ROOT = REPO_ROOT / 'foo-jax'
+
 mock_trace_parser = types.ModuleType('foo_jax.trace_parser')
 mock_trace_parser.TraceData = MockTraceData
 mock_output = types.ModuleType('foo_jax.output')
 mock_output.FOOResult = MockFOOResult
 mock_foo_jax = types.ModuleType('foo_jax')
-mock_foo_jax.__path__ = ['/home/ubuntu/ssd/optimalwebcaching/foo-jax/foo_jax']
+mock_foo_jax.__path__ = [str(FOO_JAX_ROOT / 'foo_jax')]
 sys.modules['foo_jax'] = mock_foo_jax
 sys.modules['foo_jax.trace_parser'] = mock_trace_parser
 sys.modules['foo_jax.output'] = mock_output
-sys.path.insert(0, '/home/ubuntu/ssd/optimalwebcaching/foo-jax')
+sys.path.insert(0, str(FOO_JAX_ROOT))
 
 from foo_jax.pairwise_libcachesim import (
     export_pairwise_libcachesim, load_dvars_from_cpp_foo

@@ -13,8 +13,11 @@ This implementation replaces the traditional NetworkSimplex MCF solver with a **
 ## Installation
 
 ```bash
-cd /home/ubuntu/ssd/optimalwebcaching/foo-jax
-uv sync
+cd /home/ubuntu/data/optimalwebcaching/foo-jax
+uv venv .venv --python 3.12
+uv pip install -p .venv/bin/python -e .[dev,gpu]
+# JAX 官方 CUDA pip 轮子建议不要继承系统级 LD_LIBRARY_PATH
+unset LD_LIBRARY_PATH
 ```
 
 ## Usage

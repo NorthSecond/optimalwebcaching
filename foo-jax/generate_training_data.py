@@ -12,10 +12,20 @@ Key improvements:
 import time
 import os
 import sys
+from pathlib import Path
 import numpy as np
 import argparse
 
-TRACE_PATH = "/home/ubuntu/ssd/libCacheSim/data/twitter/cluster54.oracleGeneral.sample10.zst"
+REPO_ROOT = Path(__file__).resolve().parents[1]
+DATA_ROOT = REPO_ROOT.parent
+TRACE_PATH = str(
+    Path(
+        os.environ.get(
+            "LIBCACHESIM_TRACE_PATH",
+            DATA_ROOT / "libCacheSim" / "data" / "twitter" / "cluster54.oracleGeneral.sample10.zst",
+        )
+    )
+)
 
 
 def calculate_footprint(trace) -> int:

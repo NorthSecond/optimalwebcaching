@@ -7,15 +7,15 @@ GPU 加速的 FOO (Flow Offline Optimal) 缓存策略计算工具。
 ### 1. 环境激活
 
 ```bash
-source /home/ubuntu/ssd/optimalwebcaching/foo-cuopt/bin/activate
-cd /home/ubuntu/ssd/optimalwebcaching/foo-jax
+source /home/ubuntu/data/optimalwebcaching/foo-jax/.venv/bin/activate
+cd /home/ubuntu/data/optimalwebcaching/foo-jax
 ```
 
 ### 2. 基本使用
 
 ```python
 import sys
-sys.path.insert(0, '/home/ubuntu/ssd/optimalwebcaching/foo-jax')
+sys.path.insert(0, '/home/ubuntu/data/optimalwebcaching/foo-jax')
 
 from foo_jax.trace_parser import parse_trace
 from foo_jax.topology import build_topology
@@ -24,7 +24,7 @@ from foo_jax.output import process_result
 
 # 解析 trace (推荐使用预解压的 .dat 文件，速度快 2x)
 trace = parse_trace(
-    '/home/ubuntu/ssd/libCacheSim/data/twitter/cluster54.oracleGeneral.sample10.dat',
+    '/home/ubuntu/data/libCacheSim/data/twitter/cluster54.oracleGeneral.sample10.dat',
     max_requests=1_000_000  # 可选：限制请求数
 )
 
@@ -60,13 +60,13 @@ print(f"Hits: {foo_result.integer_hits:,}")
 
 ```python
 # 预解压 trace (推荐)
-DAT_PATH = '/home/ubuntu/ssd/libCacheSim/data/twitter/cluster54.oracleGeneral.sample10.dat'
+DAT_PATH = '/home/ubuntu/data/libCacheSim/data/twitter/cluster54.oracleGeneral.sample10.dat'
 
 # 压缩 trace
-ZST_PATH = '/home/ubuntu/ssd/libCacheSim/data/twitter/cluster54.oracleGeneral.sample10.zst'
+ZST_PATH = '/home/ubuntu/data/libCacheSim/data/twitter/cluster54.oracleGeneral.sample10.zst'
 
 # 测试 trace
-TEST_PATH = '/home/ubuntu/ssd/optimalwebcaching/cuopt-python/test_trace_10k.dat'
+TEST_PATH = '/home/ubuntu/data/optimalwebcaching/cuopt-python/test_trace_10k.dat'
 ```
 
 ## API 参考
@@ -151,7 +151,7 @@ result = solve(topo, config)
 
 import sys
 import time
-sys.path.insert(0, '/home/ubuntu/ssd/optimalwebcaching/foo-jax')
+sys.path.insert(0, '/home/ubuntu/data/optimalwebcaching/foo-jax')
 
 from foo_jax.trace_parser import parse_trace
 from foo_jax.topology import build_topology, get_topology_stats
@@ -160,7 +160,7 @@ from foo_jax.output import process_result
 
 def main():
     # 配置
-    trace_path = '/home/ubuntu/ssd/libCacheSim/data/twitter/cluster54.oracleGeneral.sample10.dat'
+    trace_path = '/home/ubuntu/data/libCacheSim/data/twitter/cluster54.oracleGeneral.sample10.dat'
     cache_size = 128_974_848  # 123 MiB
     max_requests = 1_000_000
 
@@ -216,7 +216,7 @@ if __name__ == "__main__":
 
 ```bash
 # 确保使用正确的环境
-source /home/ubuntu/ssd/optimalwebcaching/foo-cuopt/bin/activate
+source /home/ubuntu/data/optimalwebcaching/foo-jax/.venv/bin/activate
 
 # 验证 GPU
 python -c "import jax; print(jax.devices())"

@@ -369,6 +369,255 @@ def export_pairs(
     console.print(f"[dim]Total time: {total_time:.2f}s[/dim]")
 
 
+@app.command()
+def export_pointwise(
+    trace_path: str = typer.Argument(..., help="Path to trace file (.dat or .zst)"),
+    cache_size: int = typer.Argument(..., help="Cache size in bytes"),
+    output_path: str = typer.Argument(..., help="Output CSV file for pointwise data"),
+    dvar_file: Optional[str] = typer.Option(None, "--dvar-file", "-d", help="Load dvars from C++ FOO output (skip solver)"),
+    max_samples_per_point: Optional[int] = typer.Option(
+        None,
+        "--max-samples-per-point",
+        "-p",
+        help="Optional cap on exported cached candidates per eviction event",
+    ),
+    max_iters: int = typer.Option(10000, "--max-iters", "-i", help="Maximum solver iterations"),
+    tol: float = typer.Option(1e-4, "--tol", "-t", help="Convergence tolerance"),
+    step_size: float = typer.Option(0.1, "--step", help="PDHG step size"),
+    max_requests: Optional[int] = typer.Option(None, "--max-requests", "-n", help="Limit trace size"),
+    seed: int = typer.Option(42, "--seed", help="Random seed"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output"),
+):
+    """Export pointwise cached candidates with soft FOO labels."""
+    try:
+        from .pointwise_libcachesim import export_pointwise_libcachesim, load_dvars_from_cpp_foo
+    except ImportError as exc:
+        console.print(
+            "[red]Missing optional dependency 'libcachesim'.[/red] "
+            "Install it before using export-pointwise."
+        )
+        raise typer.Exit(1) from exc
+
+    console.print(f"[bold blue]FOO-JAX Pointwise Export[/bold blue]")
+    console.print(f"  Trace: {trace_path}")
+    console.print(f"  Cache: {cache_size:,} bytes ({cache_size/1024/1024:.1f} MiB)")
+    if dvar_file:
+        console.print(f"  [cyan]Using external dvars:[/cyan] {dvar_file}")
+    if max_samples_per_point is not None:
+        console.print(f"  Max rows/eviction: {max_samples_per_point:,}")
+    console.print()
+
+    total_start = time.time()
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console
+    ) as progress:
+        task = progress.add_task("[cyan]Parsing trace...", total=None)
+        trace = parse_trace(trace_path, max_requests=max_requests)
+        progress.update(task, completed=True)
+        console.print(
+            f"  [green]✓[/green] Parsed {trace.n_requests:,} requests, "
+            f"{trace.n_unique_objects:,} unique objects"
+        )
+
+    if dvar_file:
+        console.print()
+        console.print("[cyan]Loading dvars from C++ FOO output...[/cyan]")
+        dvars = load_dvars_from_cpp_foo(dvar_file, trace)
+        result = FOOResult(
+            dvars=dvars,
+            n_requests=trace.n_requests,
+            n_unique_objects=trace.n_unique_objects,
+            float_hits=float(np.sum(dvars)),
+            integer_hits=int(np.sum(dvars > 0.99)),
+            ohr=float(np.sum(dvars)) / trace.n_requests,
+            primal_obj=0.0,
+            iterations=0,
+            converged=True,
+            x_outer=np.zeros(0)
+        )
+    else:
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console
+        ) as progress:
+            task = progress.add_task("[cyan]Building topology...", total=None)
+            topo = build_topology(trace, cache_size)
+            progress.update(task, completed=True)
+            console.print(
+                f"  [green]✓[/green] Built graph: {topo.n_nodes:,} nodes, "
+                f"{topo.n_inner + topo.n_outer:,} arcs"
+            )
+
+        console.print()
+        console.print("[cyan]Solving with r2HPDHG...[/cyan]")
+        config = SolverConfig(
+            max_iters=max_iters,
+            tol=tol,
+            step_size=step_size,
+            verbose=verbose,
+            check_interval=max(100, max_iters // 100)
+        )
+        solver_result = solve(topo, config)
+        result = process_result(trace, topo, solver_result)
+        status = "[green]Converged[/green]" if solver_result.converged else "[yellow]Max iterations[/yellow]"
+        console.print(f"  {status} in {solver_result.iterations:,} iterations")
+
+    console.print()
+    console.print(f"  OHR: {result.ohr:.6f} ({result.ohr*100:.2f}%)")
+    console.print()
+    console.print("[cyan]Generating pointwise data (libCacheSim decision points)...[/cyan]")
+
+    n_rows = export_pointwise_libcachesim(
+        trace=trace,
+        foo_result=result,
+        output_path=output_path,
+        cache_size=cache_size,
+        max_samples_per_point=max_samples_per_point,
+        seed=seed,
+    )
+
+    total_time = time.time() - total_start
+    console.print()
+    if n_rows > 0:
+        console.print(f"[green]Pointwise data written to:[/green] {output_path}")
+        console.print(f"  Rows generated: {n_rows:,}")
+    else:
+        console.print("[yellow]Warning: No pointwise rows generated.[/yellow]")
+    console.print(f"[dim]Total time: {total_time:.2f}s[/dim]")
+
+
+@app.command()
+def export_groupwise(
+    trace_path: str = typer.Argument(..., help="Path to trace file (.dat or .zst)"),
+    cache_size: int = typer.Argument(..., help="Cache size in bytes"),
+    output_path: str = typer.Argument(..., help="Output CSV file for groupwise data"),
+    dvar_file: Optional[str] = typer.Option(None, "--dvar-file", "-d", help="Load dvars from C++ FOO output (skip solver)"),
+    max_samples_per_point: Optional[int] = typer.Option(
+        None,
+        "--max-samples-per-point",
+        "-p",
+        help="Optional cap on exported cached candidates per eviction event",
+    ),
+    target_mode: str = typer.Option(
+        "soft",
+        "--target-mode",
+        help="Groupwise target mode: `soft` or `exact-victim`",
+    ),
+    max_iters: int = typer.Option(10000, "--max-iters", "-i", help="Maximum solver iterations"),
+    tol: float = typer.Option(1e-4, "--tol", "-t", help="Convergence tolerance"),
+    step_size: float = typer.Option(0.1, "--step", help="PDHG step size"),
+    max_requests: Optional[int] = typer.Option(None, "--max-requests", "-n", help="Limit trace size"),
+    seed: int = typer.Option(42, "--seed", help="Random seed"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output"),
+):
+    """Export groupwise cached candidates with soft or exact-victim labels."""
+    try:
+        from .groupwise_libcachesim import export_groupwise_libcachesim, load_dvars_from_cpp_foo
+    except ImportError as exc:
+        console.print(
+            "[red]Failed to import groupwise exporter dependencies.[/red]"
+        )
+        raise typer.Exit(1) from exc
+
+    console.print(f"[bold blue]FOO-JAX Groupwise Export[/bold blue]")
+    console.print(f"  Trace: {trace_path}")
+    console.print(f"  Cache: {cache_size:,} bytes ({cache_size/1024/1024:.1f} MiB)")
+    if dvar_file:
+        console.print(f"  [cyan]Using external dvars:[/cyan] {dvar_file}")
+    if max_samples_per_point is not None:
+        console.print(f"  Max rows/eviction: {max_samples_per_point:,}")
+    console.print(f"  Target mode: {target_mode}")
+    console.print()
+
+    total_start = time.time()
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console
+    ) as progress:
+        task = progress.add_task("[cyan]Parsing trace...", total=None)
+        trace = parse_trace(trace_path, max_requests=max_requests)
+        progress.update(task, completed=True)
+        console.print(
+            f"  [green]✓[/green] Parsed {trace.n_requests:,} requests, "
+            f"{trace.n_unique_objects:,} unique objects"
+        )
+
+    if dvar_file:
+        console.print()
+        console.print("[cyan]Loading dvars from C++ FOO output...[/cyan]")
+        dvars = load_dvars_from_cpp_foo(dvar_file, trace)
+        result = FOOResult(
+            dvars=dvars,
+            n_requests=trace.n_requests,
+            n_unique_objects=trace.n_unique_objects,
+            float_hits=float(np.sum(dvars)),
+            integer_hits=int(np.sum(dvars > 0.99)),
+            ohr=float(np.sum(dvars)) / trace.n_requests,
+            primal_obj=0.0,
+            iterations=0,
+            converged=True,
+            x_outer=np.zeros(0)
+        )
+    else:
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console
+        ) as progress:
+            task = progress.add_task("[cyan]Building topology...", total=None)
+            topo = build_topology(trace, cache_size)
+            progress.update(task, completed=True)
+            console.print(
+                f"  [green]✓[/green] Built graph: {topo.n_nodes:,} nodes, "
+                f"{topo.n_inner + topo.n_outer:,} arcs"
+            )
+
+        console.print()
+        console.print("[cyan]Solving with r2HPDHG...[/cyan]")
+        config = SolverConfig(
+            max_iters=max_iters,
+            tol=tol,
+            step_size=step_size,
+            verbose=verbose,
+            check_interval=max(100, max_iters // 100)
+        )
+        solver_result = solve(topo, config)
+        result = process_result(trace, topo, solver_result)
+        status = "[green]Converged[/green]" if solver_result.converged else "[yellow]Max iterations[/yellow]"
+        console.print(f"  {status} in {solver_result.iterations:,} iterations")
+
+    console.print()
+    console.print(f"  OHR: {result.ohr:.6f} ({result.ohr*100:.2f}%)")
+    console.print()
+    console.print("[cyan]Generating groupwise data (libCacheSim decision points)...[/cyan]")
+
+    n_groups, n_rows = export_groupwise_libcachesim(
+        trace=trace,
+        foo_result=result,
+        output_path=output_path,
+        cache_size=cache_size,
+        max_samples_per_point=max_samples_per_point,
+        seed=seed,
+        target_mode=target_mode,
+    )
+
+    total_time = time.time() - total_start
+    console.print()
+    if n_rows > 0:
+        console.print(f"[green]Groupwise data written to:[/green] {output_path}")
+        console.print(f"  Groups generated: {n_groups:,}")
+        console.print(f"  Rows generated: {n_rows:,}")
+    else:
+        console.print("[yellow]Warning: No groupwise rows generated.[/yellow]")
+    console.print(f"[dim]Total time: {total_time:.2f}s[/dim]")
+
+
 def main():
     """Entry point for CLI."""
     app()

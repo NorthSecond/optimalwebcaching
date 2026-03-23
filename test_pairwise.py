@@ -8,6 +8,7 @@ import numpy as np
 import time
 import os
 import sys
+from pathlib import Path
 from dataclasses import dataclass
 from typing import List
 
@@ -25,6 +26,8 @@ class MockFOOResult:
 
 # Patch foo_jax modules before importing pairwise_libcachesim
 import types
+REPO_ROOT = Path(__file__).resolve().parent
+FOO_JAX_ROOT = REPO_ROOT / 'foo-jax'
 
 # Create mock modules to avoid JAX dependency
 mock_trace_parser = types.ModuleType('foo_jax.trace_parser')
@@ -32,14 +35,14 @@ mock_trace_parser.TraceData = MockTraceData
 mock_output = types.ModuleType('foo_jax.output')
 mock_output.FOOResult = MockFOOResult
 mock_foo_jax = types.ModuleType('foo_jax')
-mock_foo_jax.__path__ = ['/home/ubuntu/ssd/optimalwebcaching/foo-jax/foo_jax']
+mock_foo_jax.__path__ = [str(FOO_JAX_ROOT / 'foo_jax')]
 
 sys.modules['foo_jax'] = mock_foo_jax
 sys.modules['foo_jax.trace_parser'] = mock_trace_parser
 sys.modules['foo_jax.output'] = mock_output
 
 # Now import the module under test
-sys.path.insert(0, '/home/ubuntu/ssd/optimalwebcaching/foo-jax')
+sys.path.insert(0, str(FOO_JAX_ROOT))
 from foo_jax.pairwise_libcachesim import (
     PairwiseGenerator, export_pairwise_libcachesim, SamplingStrategy
 )

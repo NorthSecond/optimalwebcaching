@@ -9,12 +9,13 @@ import networkx as nx
 import time
 import subprocess
 import os
+from pathlib import Path
 from dataclasses import dataclass
 
 SRC_TRACE = '/tmp/test_trace.oracleGeneral.bin'
 SMALL_TRACE = '/tmp/test_trace_small.oracleGeneral.bin'
 N_REQ = 1000
-FOO_BIN = '/home/ubuntu/ssd/optimalwebcaching/OHRgoal/FOO/foo'
+FOO_BIN = str(Path(__file__).resolve().parent / 'OHRgoal' / 'FOO' / 'foo')
 
 @dataclass
 class SimpleTopo:

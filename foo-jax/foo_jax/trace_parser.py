@@ -11,6 +11,7 @@ Reference: /lib/trace/oracle_general_reader.h
 """
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Optional
 import struct
 import numpy as np
@@ -321,8 +322,7 @@ def load_test_trace(name: str = "tiny") -> TraceData:
     Args:
         name: One of "tiny" (6 records), "100", "10k", "100k"
     """
-    import os
-    base_path = "/home/ubuntu/ssd/optimalwebcaching/cuopt-python"
+    base_path = Path(__file__).resolve().parents[2] / "cuopt-python"
 
     traces = {
         "tiny": "test_trace_tiny.dat",
@@ -334,5 +334,5 @@ def load_test_trace(name: str = "tiny") -> TraceData:
     if name not in traces:
         raise ValueError(f"Unknown test trace: {name}. Available: {list(traces.keys())}")
 
-    path = os.path.join(base_path, traces[name])
-    return parse_trace_fast(path)
+    path = base_path / traces[name]
+    return parse_trace_fast(str(path))
